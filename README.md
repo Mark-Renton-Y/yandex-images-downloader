@@ -1,2 +1,2 @@
-npm install\n
+npm install<br>
 node index

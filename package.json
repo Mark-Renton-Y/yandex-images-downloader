@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "detect-file-type": "^0.2.8",
+    "file-type": "^11.1.0",
+    "image-downloader": "^4.0.2",
+    "is-image": "^3.0.0",
+    "puppeteer": "^9.0.0"
+  }
+}

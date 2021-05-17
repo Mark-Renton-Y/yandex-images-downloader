@@ -1,3 +1,5 @@
+<b>Install Node.js, download package and write in cmd:</b>
+<br>
 npm install
 <br>
 node index

@@ -4,7 +4,7 @@ npm install
 <br>
 node index
 <hr>
-Default Settings in index.js file:
+Default Settings in settings.json file:
 <br>
 <pre>
     const DOWNLOAD_IMAGES = true;

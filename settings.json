@@ -1,0 +1,7 @@
+{
+    "DOWNLOAD_IMAGES": true,
+    "IMAGES_FOLDER": "images",
+    "URLS_FILE": "URLs",
+    "SCROLL_DELAY": 1800,
+    "MAX_IMAGES": 2000
+}

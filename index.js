@@ -55,15 +55,15 @@ async function downloadImages(urls){
     for(index in urls){
         let url = urls[index++];
         try{
-            const fileExt = url.match(/\.[0-9a-z]+(?=\?.*$)/i);
+            const fileExt = url.href.match(/\.[0-9a-z]+(?=\?.*$)/i);
             const file = fs.createWriteStream(
                 DIR +
                 "/image" +
                 index +
                 (fileExt ? fileExt[0] : "")
             );
-            let res = await fetch(url, {
-                agent: url.match(/^(https)/i) ? httpsAgent : null
+            let res = await fetch(url.src, {
+                agent: url.src.match(/^(https)/i) ? httpsAgent : null
             });
             
             await new Promise(resolve => {
@@ -91,7 +91,7 @@ async function downloadImages(urls){
                 });
             }
         } catch(err) {
-            console.log("Error occured while downloading: ", url);
+            console.log("Error occured while downloading: ", url.src);
         }
     }
 
@@ -100,7 +100,13 @@ async function downloadImages(urls){
 
 async function getImgURLs(page){
     return await page.$$eval(".serp-item.serp-item_type_search", els => els.map(
-        el => JSON.parse(el.getAttribute("data-bem"))['serp-item']['img_href']
+        el => {
+            const data = JSON.parse(el.getAttribute("data-bem"));
+            return {
+                src: data["serp-item"]["preview"][0]["url"],
+                href: data["serp-item"]["img_href"]
+            };
+        }
     ));
 }
 

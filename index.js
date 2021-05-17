@@ -1,4 +1,4 @@
-//сделать нормальный загрузчик чтобы качал без ошибок
+//разбить проект на файлы
 
 const DOWNLOAD_IMAGES = true;
 const IMAGES_FOLDER = "images";
@@ -7,12 +7,16 @@ const SCROLL_DELAY = 1800;
 const MAX_IMAGES = 2000;
 
 const puppeteer = require('puppeteer');
-const download = require('image-downloader');
 const readline = require("readline");
 const fs = require("fs");
 const path = require('path');
 const detectFileType = require('detect-file-type');
 const isImage = require("is-image");
+const fetch = require("node-fetch");
+const https = require("https");
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+  });
 
 const DIR = path.join(__dirname, IMAGES_FOLDER);
 
@@ -49,27 +53,49 @@ async function downloadImages(urls){
     fs.mkdirSync(DIR);
 
     for(index in urls){
-        let url = urls[index];
+        let url = urls[index++];
         try{
-            let { filename } = await download.image({
-                url,
-                // dest: url.length > 200 ? `${DIR}/image${new Date().getMilliseconds()}.tmp` : DIR,
-                dest: DIR + "/image" + index + url.match(/\.[0-9a-z]+$/i)[0],
-                extractFilename: false,
-                timeout: 4000
+            const fileExt = url.match(/\.[0-9a-z]+(?=\?.*$)/i);
+            const file = fs.createWriteStream(
+                DIR +
+                "/image" +
+                index +
+                (fileExt ? fileExt[0] : "")
+            );
+            let res = await fetch(url, {
+                agent: httpsAgent
             });
+            
+            await new Promise(resolve => {
+                file.on("finish", resolve);
+                res.body.pipe(file);
+            });
+
+            const filename = file.path;
 
             //fix file exts
             if(!isImage(filename)){
-                detectFileType.fromFile(filename, (err, { ext }) => {
-                    if(err) throw err;
-                    fs.renameSync(filename, filename + "." + ext);
+                await new Promise((resolve, reject) => {
+                    detectFileType.fromFile(filename, (err, data) => {
+                        if(!data){
+                            reject(new Error("This is not an image"));
+                            return;
+                        }
+                        if(err){
+                            reject(err);
+                            return;
+                        }
+                        fs.renameSync(filename, filename + "." + data.ext);
+                        resolve();
+                    });
                 });
             }
         } catch(err) {
             console.log("Error occured while downloading: ", url);
         }
     }
+
+    return fs.readdirSync(DIR).length;
 }
 
 async function getImgURLs(page){
@@ -124,13 +150,14 @@ async function parser(){
 
         fs.writeFileSync(URLS_FILE + ".json", JSON.stringify({ urls }));
 
-        console.log(`URLs are ready! (~${urls.length})`);
+        console.log(`URLs are ready! (${urls.length})`);
 
         await browser.close();
 
         if(DOWNLOAD_IMAGES){
             console.log("Downloading images from URLs...");
-            await downloadImages(urls);
+            const filesDownloaded = await downloadImages(urls);
+            console.log(`Downloaded ${filesDownloaded} images from ${urls.length} URLs.`);
         }
 
         console.log("Done!");

@@ -16,7 +16,7 @@ const fetch = require("node-fetch");
 const https = require("https");
 const httpsAgent = new https.Agent({
     rejectUnauthorized: false,
-  });
+});
 
 const DIR = path.join(__dirname, IMAGES_FOLDER);
 
@@ -63,7 +63,7 @@ async function downloadImages(urls){
                 (fileExt ? fileExt[0] : "")
             );
             let res = await fetch(url, {
-                agent: httpsAgent
+                agent: url.match(/^(https)/i) ? httpsAgent : null
             });
             
             await new Promise(resolve => {
